@@ -1,0 +1,172 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/addons/p5.sound.js"></script>
+    <script>
+        var music = [];
+        var disc = [];
+        var amp, level;
+        var fft, energy;
+        var levelArr = [];
+        var levelAmount = 30;
+        var vol = 1;
+        var trackName = ["Dreams", "Parallel", "Hellcat", "Blank"];
+        var artist = ["Manhat10", "Switch.Music", "Desmeon", "Disfigure"];
+        var rand = 3;
+        var show = true;
+
+        function preload() {
+            for (var i = 0; i < 4; i++) {
+                music[i] = loadSound("resources/" + i + ".mp3");
+                disc[i] = loadImage("resources/" + i + ".png");
+            }
+        }
+
+        function setup() {
+            createCanvas(600, 600);
+            background(20);
+            rectMode(CENTER);
+
+            amp = new p5.Amplitude();
+            fft = new p5.FFT();
+
+            music[rand].loop();
+        }
+
+        function draw() {
+            background(10, 50);
+            enerygyCircle();
+            levelBar();
+            if (show) {
+                spinDisc();
+                spinDiscPlay();
+                musicInfo();
+            }
+        }
+
+        function mouseDragged() {
+            //Adjust volume
+            vol = map(constrain(mouseY, 0, height), 0, height, 1, 0);
+            music[rand].setVolume(vol);
+        }
+
+        function keyPressed() {
+            if (keyCode == ENTER) {
+                //Shuffle Music
+                for (var i = 0; i < 4; i++) {
+                    if (music[i].isPlaying()) {
+                        music[i].stop();
+                    }
+                }
+                rand = round(random(0, music.length - 1));
+                music[rand].loop();
+            }
+            if (keyCode == SHIFT) {
+                //Toggle Info Panel
+                show = !show;
+            }
+        }
+
+        function levelBar() {
+            level = amp.getLevel();
+            levelArr.unshift(level);
+
+            for (var i = 0; i < levelArr.length; i++) {
+                var x = map(i, 0, levelAmount, width * 2 / 3, width);
+                var x1 = map(i, 0, levelAmount, width / 3, 0);
+                var y = map(i, 0, levelAmount, height * 2 / 3, height);
+                var y1 = map(i, 0, levelAmount, height / 3, 0);
+                var w = map(levelArr[i], 0, 0.8, 4, width);
+                var h = height / (levelAmount * 10);
+
+                var alpha = map(i, 0, levelAmount, 255, -50);
+                var red = map(levelArr[i], 0, 0.8, 100, 255);
+                var blue = map(levelArr[i], 0, 0.8, 200, 100);
+                noStroke();
+                fill(red, 0, blue, alpha);
+
+                rect(width / 2, y1, w, h);
+                rect(width / 2, y, w, h);
+                rect(x1, height / 2, h, w);
+                rect(x, height / 2, h, w);
+
+                push();
+                translate(width / 2, height / 2);
+                rotate(radians(45));
+                translate(-width / 2, -height / 2);
+                rect(width / 2, y1, w, h);
+                rect(width / 2, y, w, h);
+                rect(x1, height / 2, h, w);
+                rect(x, height / 2, h, w);
+                pop();
+            }
+            levelArr.splice(levelAmount, 1);
+        }
+
+        function enerygyCircle() {
+            energy = fft.analyze(16);
+            noFill();
+            strokeWeight(5);
+            for (var i = 0; i < energy.length; i++) {
+                energy[i] = map(energy[i], 0, 255, 0, width * 1.5);
+                stroke(energy[i], 0, energy[i], 50);
+                ellipse(width / 2, height / 2, energy[i]);
+            }
+        }
+
+        function spinDisc() {
+            push();
+            translate(width * 2 / 5, height * 7 / 8);
+            fill(100);
+            stroke(200);
+            strokeWeight(2);
+            imageMode(CENTER);
+            ellipse(0, 0, 102);
+            image(disc[rand], 0, 0, 100, 100);
+            ellipse(0, 0, 20);
+            pop();
+        }
+
+        function spinDiscPlay() {
+            push();
+            translate(width * 2 / 5, height * 7 / 8);
+            rotate(radians(frameCount * 3 % 360));
+            fill(100);
+            stroke(200);
+            strokeWeight(2);
+            imageMode(CENTER);
+            ellipse(0, -51, 5);
+            pop();
+        }
+
+        function musicInfo() {
+            push();
+            translate(width * 2 / 5, height * 7 / 8);
+            noStroke();
+            fill(180);
+            textSize(12);
+            text("Now playing...", 70, -10);
+            textSize(15);
+            fill(255);
+            text(trackName[rand], 70, 10);
+            fill(180);
+            textSize(12);
+            text("by " + artist[rand], 70, 28);
+            fill(140);
+            text("Volume: " + round(vol * 100) + "%", 70, 42);
+            pop();
+        }
+    </script>
+</head>
+
+<body>
+    <div>Drag mouse up and down to control volume.</div>
+    <div>Press <b>ENTER</b> to change music.</div>
+    <div>Press <b>SHIFT</b> to toggle the Info Panel</div>
+    <div>All music used are under CC3.0 License.</div>
+    <div>Please wait patiently for the music to load. Enjoy :)</div>
+</body>
+
+</html>
